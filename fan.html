@@ -1,9 +1,35 @@
+ご要望に合わせて、大幅に改良しました！
+ボタンが増えるので、画面上で邪魔にならないようにグループ分けして配置しています。
+
+### 改良ポイント
+
+1. **モード名の変更**
+* ボタンの表示を「モード：**かいてん**」と「モード：**いろ**」にしました。
+
+
+2. **大きさボタンの独立**
+* 「4×4」「8×8」「12×12」の3つのボタンを作りました。
+
+
+3. **かたちボタンの独立**
+* 「扇形」「斜線」「ストライプ」「二等辺三角」のボタンを作りました。
+* 押すと「かたちがかわります（りせっとされます）」と確認画面が出ます。
+
+
+4. **画面レイアウト**
+* ボタンが多くなったので、「おおきさ」「かたち」「あそび」のラベルをつけて整理しました。
+
+
+
+以下のコードを新しいファイル（例: `v4.html`）として保存するか、中身を入れ替えて使ってください。
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>二次元の積木遊び - モード切替版</title>
+  <title>二次元の積木遊び - ボタン選択版</title>
   <style>
     html, body {
       margin: 0;
@@ -12,50 +38,90 @@
       font-family: sans-serif;
       touch-action: manipulation;
     }
+    
+    /* メニュー全体のレイアウト */
     #menu {
       position: fixed;
-      top: 1rem;
-      left: 1rem;
+      top: 10px;
+      left: 10px;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 8px; /* グループ間の隙間 */
       z-index: 100;
+      max-width: 250px;
     }
+
+    /* ラベルのスタイル */
+    .group-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-left: 4px;
+      font-weight: bold;
+    }
+
+    /* 横並びボタンのグループ */
+    .button-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    /* ボタン共通スタイル */
     button {
-      font-size: 1.2rem;
-      padding: 0.5rem 1rem;
-      border-radius: 1rem;
+      font-size: 1rem;
+      padding: 6px 10px;
+      border-radius: 8px;
       background: white;
       border: 2px solid #ccc;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.1s;
     }
     button:active {
       transform: scale(0.95);
+      background: #eee;
     }
-    /* モードボタンのデザイン */
+
+    /* 選択中のボタンを目立たせるクラス */
+    button.active {
+      background: #e3f2fd;
+      border-color: #2196f3;
+      color: #0d47a1;
+      font-weight: bold;
+    }
+
+    /* モードボタン */
     #modeButton {
+      width: 100%;
+      text-align: center;
       font-weight: bold;
       border-width: 3px;
     }
-    /* 保存ボタン */
-    #saveButton {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      background: #ffd5d5;
-      border-color: #ffaaaa;
-    }
+
     /* リセットボタン */
     #resetButton {
+      width: 100%;
       background: #eee;
       color: #555;
     }
+
+    /* 保存ボタン（右上） */
+    #saveButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ffd5d5;
+      border-color: #ffaaaa;
+      z-index: 100;
+      font-weight: bold;
+    }
+
     #canvas {
       display: grid;
       place-items: center;
       height: 100vh;
+      padding-top: 20px; /* メニューとかぶらないように少し下げる */
+      box-sizing: border-box;
     }
     canvas {
       touch-action: none;
@@ -65,26 +131,54 @@
   </style>
 </head>
 <body>
-  <div id="menu">
-    <button id="sizeButton">おおきさ</button>
-    <button id="modeButton">モード：かたち</button>
-    <button id="resetButton">りせっと</button>
-  </div>
+
   <button id="saveButton">ほぞん</button>
+
+  <div id="menu">
+    
+    <div>
+      <div class="group-label">おおきさ</div>
+      <div class="button-row" id="sizeGroup">
+        <button data-size="4">4×4</button>
+        <button data-size="8">8×8</button>
+        <button data-size="12">12×12</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="group-label">かたち</div>
+      <div class="button-row" id="shapeGroup">
+        <button data-shape="fan">扇形</button>
+        <button data-shape="diagonal">斜線</button>
+        <button data-shape="stripe">帯</button>
+        <button data-shape="triangle">三角</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="group-label">あそび</div>
+      <div class="button-row">
+        <button id="modeButton">モード：かいてん</button>
+      </div>
+      <div class="button-row" style="margin-top:5px;">
+        <button id="resetButton">りせっと</button>
+      </div>
+    </div>
+
+  </div>
+
   <div id="canvas"></div>
   
   <script>
     const canvasDiv = document.getElementById("canvas");
-    const sizeButton = document.getElementById("sizeButton");
     const modeButton = document.getElementById("modeButton");
     const resetButton = document.getElementById("resetButton");
     const saveButton = document.getElementById("saveButton");
 
-    let gridSizes = [4, 8, 16];
-    let gridIndex = 0;
-    
-    // モード管理 'rotate' (かたち/回転) or 'color' (いろ/色変え)
-    let currentMode = 'rotate'; 
+    // 設定値
+    let currentSize = 4;        // 初期サイズ
+    let currentShape = 'fan';   // 初期形状
+    let currentMode = 'rotate'; // 'rotate'(かいてん) or 'color'(いろ)
 
     const colors = [
       ["#2196f3", "#90caf9"], // 青
@@ -92,11 +186,9 @@
       ["#f44336", "#f8c4c4"], // 赤
       ["#ff9800", "#ffe0b2"], // オレンジ
       ["#9c27b0", "#e1bee7"], // 紫
-      ["#607d8b", "#cfd8dc"]  // グレー（追加）
+      ["#607d8b", "#cfd8dc"]  // グレー
     ];
 
-    // 各マスの情報を保存する配列
-    // grid[y][x] = { angle: 0, colorIndex: 0 }
     let grid = [];
     let boxSize = 0;
 
@@ -104,50 +196,33 @@
     let ctx = canvas.getContext("2d");
     canvasDiv.appendChild(canvas);
 
-    // 初期化（サイズ変更やリセット時）
+    // ■初期化関数
     function initGrid() {
-      const size = gridSizes[gridIndex];
+      // 画面サイズに合わせてキャンバスサイズを決定
       const cw = Math.min(window.innerWidth, window.innerHeight) * 0.9;
       canvas.width = canvas.height = cw;
-      boxSize = cw / size;
+      boxSize = cw / currentSize;
 
+      // グリッドデータの生成
       grid = [];
-      for (let y = 0; y < size; y++) {
+      for (let y = 0; y < currentSize; y++) {
         grid[y] = [];
-        for (let x = 0; x < size; x++) {
-          // マスごとに角度と色番号を持つ
+        for (let x = 0; x < currentSize; x++) {
           grid[y][x] = { angle: 0, colorIndex: 0 };
         }
       }
-      render();
+      
+      updateUIButtons(); // ボタンの見た目を更新
+      render();          // 描画
     }
 
-    // キャンバスをクリックしたときの処理
-    canvas.onclick = function (e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / boxSize);
-      const y = Math.floor((e.clientY - rect.top) / boxSize);
-      
-      if (grid[y] && grid[y][x]) {
-        if (currentMode === 'rotate') {
-          // かたちモード：90度回転
-          grid[y][x].angle = (grid[y][x].angle + 90) % 360;
-        } else {
-          // いろモード：そのマスの色だけ次の色へ
-          grid[y][x].colorIndex = (grid[y][x].colorIndex + 1) % colors.length;
-        }
-        render();
-      }
-    };
-
+    // ■描画関数
     function render() {
-      const size = gridSizes[gridIndex];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
+      for (let y = 0; y < currentSize; y++) {
+        for (let x = 0; x < currentSize; x++) {
           const cell = grid[y][x];
-          // マスごとの色を取得
           const [color1, color2] = colors[cell.colorIndex];
           
           const cx = x * boxSize;
@@ -158,32 +233,95 @@
           ctx.rotate((cell.angle * Math.PI) / 180);
           ctx.translate(-boxSize / 2, -boxSize / 2);
 
-          // ★形状の描画：扇形（おうぎがた）
-          // 4つ集まると円になる形
+          // 背景色（薄いほう）
           ctx.fillStyle = color2;
-          ctx.fillRect(0, 0, boxSize, boxSize); // 背景
-          
+          ctx.fillRect(0, 0, boxSize, boxSize);
+
+          // メイン色（濃いほう）
           ctx.fillStyle = color1;
-          ctx.beginPath();
-          ctx.moveTo(0, 0); // 左上が中心
-          ctx.arc(0, 0, boxSize, 0, Math.PI / 2); 
-          ctx.lineTo(0, 0);
-          ctx.fill();
+
+          if (currentShape === 'fan') {
+            // 扇形
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, boxSize, 0, Math.PI / 2);
+            ctx.lineTo(0, 0);
+            ctx.fill();
+
+          } else if (currentShape === 'diagonal') {
+            // 斜線
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(boxSize, boxSize);
+            ctx.lineTo(0, boxSize);
+            ctx.fill();
+
+          } else if (currentShape === 'stripe') {
+            // ストライプ（帯）
+            // 半分だけ塗る
+            ctx.fillRect(0, 0, boxSize / 2, boxSize);
+
+          } else if (currentShape === 'triangle') {
+            // 二等辺三角形
+            ctx.beginPath();
+            ctx.moveTo(0, boxSize);
+            ctx.lineTo(boxSize / 2, 0);
+            ctx.lineTo(boxSize, boxSize);
+            ctx.fill();
+          }
 
           ctx.restore();
         }
       }
     }
 
-    // ボタン操作
-    sizeButton.onclick = () => {
-      if (confirm("おおきさをきりかえますか？（リセットされます）")) {
-        gridIndex = (gridIndex + 1) % gridSizes.length;
-        initGrid();
+    // ■クリックイベント（盤面操作）
+    canvas.onclick = function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / boxSize);
+      const y = Math.floor((e.clientY - rect.top) / boxSize);
+      
+      if (grid[y] && grid[y][x]) {
+        if (currentMode === 'rotate') {
+          // かいてんモード
+          grid[y][x].angle = (grid[y][x].angle + 90) % 360;
+        } else {
+          // いろモード
+          grid[y][x].colorIndex = (grid[y][x].colorIndex + 1) % colors.length;
+        }
+        render();
       }
     };
 
-    // モード切替ボタン
+    // ■ボタンイベント設定
+    
+    // おおきさボタン
+    document.querySelectorAll('#sizeGroup button').forEach(btn => {
+      btn.onclick = () => {
+        const newSize = parseInt(btn.dataset.size);
+        if (newSize === currentSize) return; // 同じなら何もしない
+
+        if (confirm("おおきさをかえますか？（りせっとされます）")) {
+          currentSize = newSize;
+          initGrid();
+        }
+      };
+    });
+
+    // かたちボタン
+    document.querySelectorAll('#shapeGroup button').forEach(btn => {
+      btn.onclick = () => {
+        const newShape = btn.dataset.shape;
+        if (newShape === currentShape) return; // 同じなら何もしない
+
+        if (confirm("かたちをかえますか？（りせっとされます）")) {
+          currentShape = newShape;
+          initGrid();
+        }
+      };
+    });
+
+    // モードボタン
     modeButton.onclick = () => {
       if (currentMode === 'rotate') {
         currentMode = 'color';
@@ -192,7 +330,7 @@
         modeButton.style.color = "#e65100";
       } else {
         currentMode = 'rotate';
-        modeButton.innerText = "モード：かたち";
+        modeButton.innerText = "モード：かいてん";
         modeButton.style.borderColor = "#2196f3"; // 青枠
         modeButton.style.color = "#0d47a1";
       }
@@ -205,6 +343,7 @@
       }
     };
 
+    // 保存ボタン
     saveButton.onclick = () => {
       if (confirm("ほぞんしますか？")) {
         const a = document.createElement("a");
@@ -215,12 +354,34 @@
       }
     };
 
-    // 初期化実行
+    // ■UI更新（選択中のボタンに色をつける）
+    function updateUIButtons() {
+      // おおきさボタンの見た目
+      document.querySelectorAll('#sizeGroup button').forEach(btn => {
+        if (parseInt(btn.dataset.size) === currentSize) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      // かたちボタンの見た目
+      document.querySelectorAll('#shapeGroup button').forEach(btn => {
+        if (btn.dataset.shape === currentShape) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // 初回実行
     initGrid();
-    // 初期ボタン色設定
+    // 初期モードボタン色設定
     modeButton.style.borderColor = "#2196f3";
     modeButton.style.color = "#0d47a1";
 
   </script>
 </body>
 </html>
+
+```

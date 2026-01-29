@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二次元の積木遊び - 扇形ver</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      font-family: sans-serif;
+      touch-action: manipulation;
+    }
+    #menu {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      z-index: 100;
+    }
+    #menu button {
+      font-size: 1.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      background: white;
+      border: 2px solid #ccc;
+      cursor: pointer;
+    }
+    #menu button:active {
+      background: #eee;
+    }
+    #saveButton {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      background: #ffd5d5;
+      border: 2px solid #ffaaaa;
+      cursor: pointer;
+    }
+    #canvas {
+      display: grid;
+      place-items: center;
+      height: 100vh;
+    }
+    canvas {
+      touch-action: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <button id="sizeButton">おおきさ</button>
+    <button id="colorButton">いろ</button>
+    <button id="shapeButton">かたち</button>
+  </div>
+  <button id="saveButton">ほぞん</button>
+  <div id="canvas"></div>
+  <script>
+    const canvasDiv = document.getElementById("canvas");
+    const sizeButton = document.getElementById("sizeButton");
+    const colorButton = document.getElementById("colorButton");
+    const shapeButton = document.getElementById("shapeButton");
+    const saveButton = document.getElementById("saveButton");
+
+    let gridSizes = [4, 8, 16];
+    let gridIndex = 0;
+    
+    // ★ここを変更：かたちを4種類に増やしました
+    let shapeIndex = 0; 
+    const maxShapes = 4; // 斜線、三角、L字、扇形
+
+    let colorIndex = 0;
+    const colors = [
+      ["#2196f3", "#90caf9"], 
+      ["#4caf50", "#a5f5ac"], 
+      ["#f44336", "#f8c4c4"], 
+      ["#ff9800", "#ffe0b2"], 
+      ["#9c27b0", "#e1bee7"]  
+    ];
+
+    let grid = [];
+    let boxSize = 0;
+
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+    canvasDiv.appendChild(canvas);
+
+    function initGrid() {
+      const size = gridSizes[gridIndex];
+      const cw = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+      canvas.width = canvas.height = cw;
+      boxSize = cw / size;
+
+      grid = [];
+      for (let y = 0; y < size; y++) {
+        grid[y] = [];
+        for (let x = 0; x < size; x++) {
+          grid[y][x] = { angle: 0 };
+        }
+      }
+      render();
+    }
+
+    canvas.onclick = function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / boxSize);
+      const y = Math.floor((e.clientY - rect.top) / boxSize);
+      
+      if (grid[y] && grid[y][x]) {
+        grid[y][x].angle = (grid[y][x].angle + 90) % 360;
+        render();
+      }
+    };
+
+    function render() {
+      const size = gridSizes[gridIndex];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const [color1, color2] = colors[colorIndex];
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const angle = grid[y][x].angle;
+          const cx = x * boxSize;
+          const cy = y * boxSize;
+          
+          ctx.save();
+          ctx.translate(cx + boxSize / 2, cy + boxSize / 2);
+          ctx.rotate((angle * Math.PI) / 180);
+          ctx.translate(-boxSize / 2, -boxSize / 2);
+
+          if (shapeIndex === 0) {
+            // 斜線
+            ctx.fillStyle = color1;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(boxSize, boxSize);
+            ctx.lineTo(0, boxSize);
+            ctx.fill();
+            
+            ctx.fillStyle = color2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(boxSize, 0);
+            ctx.lineTo(boxSize, boxSize);
+            ctx.fill();
+
+          } else if (shapeIndex === 1) {
+            // 二等辺三角形
+            ctx.fillStyle = color2;
+            ctx.fillRect(0, 0, boxSize, boxSize);
+            ctx.fillStyle = color1;
+            ctx.beginPath();
+            ctx.moveTo(0, boxSize);
+            ctx.lineTo(boxSize / 2, 0);
+            ctx.lineTo(boxSize, boxSize);
+            ctx.fill();
+
+          } else if (shapeIndex === 2) {
+            // L字型
+            ctx.fillStyle = color2;
+            ctx.fillRect(0, 0, boxSize, boxSize);
+            ctx.fillStyle = color1;
+            ctx.fillRect(0, 0, boxSize / 2, boxSize);
+            ctx.fillRect(0, 0, boxSize, boxSize / 2);
+
+          } else if (shapeIndex === 3) {
+            // ★追加：扇形（おうぎがた）
+            ctx.fillStyle = color2;
+            ctx.fillRect(0, 0, boxSize, boxSize); // 背景
+            
+            ctx.fillStyle = color1;
+            ctx.beginPath();
+            ctx.moveTo(0, 0); // 左上が中心
+            // 0度から90度(Math.PI/2)まで円を描く
+            ctx.arc(0, 0, boxSize, 0, Math.PI / 2); 
+            ctx.lineTo(0, 0);
+            ctx.fill();
+          }
+
+          ctx.restore();
+        }
+      }
+    }
+
+    sizeButton.onclick = () => {
+      if (confirm("おおきさをきりかえますか？（もようはリセットされます）")) {
+        gridIndex = (gridIndex + 1) % gridSizes.length;
+        initGrid();
+      }
+    };
+
+    colorButton.onclick = () => {
+      colorIndex = (colorIndex + 1) % colors.length;
+      render();
+    };
+
+    shapeButton.onclick = () => {
+      // ★ここを変更：3種類からmaxShapes(4種類)に変更
+      shapeIndex = (shapeIndex + 1) % maxShapes;
+      render();
+    };
+
+    saveButton.onclick = () => {
+      if (confirm("ほぞんしますか？")) {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "積木.png";
+        a.click();
+        alert("ほぞんしました！");
+      }
+    };
+
+    initGrid();
+  </script>
+</body>
+</html>

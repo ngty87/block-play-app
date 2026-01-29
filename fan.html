@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>二次元の積木遊び - 扇形ver</title>
+  <title>二次元の積木遊び - ストライプ＆扇形ver</title>
   <style>
     html, body {
       margin: 0;
@@ -73,9 +73,8 @@
     let gridSizes = [4, 8, 16];
     let gridIndex = 0;
     
-    // ★ここを変更：かたちを4種類に増やしました
     let shapeIndex = 0; 
-    const maxShapes = 4; // 斜線、三角、L字、扇形
+    const maxShapes = 4; // 斜線、三角、ストライプ、扇形の4種類
 
     let colorIndex = 0;
     const colors = [
@@ -164,22 +163,22 @@
             ctx.fill();
 
           } else if (shapeIndex === 2) {
-            // L字型
+            // ★変更：ストライプ（帯）
+            // 背景色で全体を塗る
             ctx.fillStyle = color2;
             ctx.fillRect(0, 0, boxSize, boxSize);
+            // メイン色で半分だけ塗る（回転すると上下になる）
             ctx.fillStyle = color1;
             ctx.fillRect(0, 0, boxSize / 2, boxSize);
-            ctx.fillRect(0, 0, boxSize, boxSize / 2);
 
           } else if (shapeIndex === 3) {
-            // ★追加：扇形（おうぎがた）
+            // 扇形（おうぎがた）
             ctx.fillStyle = color2;
-            ctx.fillRect(0, 0, boxSize, boxSize); // 背景
+            ctx.fillRect(0, 0, boxSize, boxSize);
             
             ctx.fillStyle = color1;
             ctx.beginPath();
-            ctx.moveTo(0, 0); // 左上が中心
-            // 0度から90度(Math.PI/2)まで円を描く
+            ctx.moveTo(0, 0);
             ctx.arc(0, 0, boxSize, 0, Math.PI / 2); 
             ctx.lineTo(0, 0);
             ctx.fill();
@@ -203,7 +202,6 @@
     };
 
     shapeButton.onclick = () => {
-      // ★ここを変更：3種類からmaxShapes(4種類)に変更
       shapeIndex = (shapeIndex + 1) % maxShapes;
       render();
     };
